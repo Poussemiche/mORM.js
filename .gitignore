@@ -1,8 +1,0 @@
-#NODE.JS
-node_modules/
-
-#GENERATED STUFF
-lib/
-
-# OPERATING SYSTEM
-.DS_Store
