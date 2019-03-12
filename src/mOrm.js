@@ -15,11 +15,13 @@ export default class mOrm {
             }
             this.config = require(this.configPathName);
         } else {
-            if( dbConfig.uri){
+            if ( dbConfig.uri){
                 // "uri": "postgres://postgres:gabriel@localhost:5432/ilovepragmatic"
                 const regExp = /^(.*):\/\/(.*):(.*)@(.*):(\d+)\/(.*)$/g;
 
                 const [, type, username, password, host, port, database] = regExp.exec(dbConfig.uri);
+                const synchronize = dbConfig.synchronize;
+                const entities = dbConfig.entities;
 
                 this.config = {
                     type,
@@ -29,12 +31,18 @@ export default class mOrm {
                     port, 
                     database
                 }; 
+            } else {
+                this.config = dbConfig; 
+            }          
+        }
+            
+        this.config.synchronize = dbConfig.synchronize;
+        this.config.entities = dbConfig.entities;
+        this.entities = {};
 
-                } else {
-                   this.config = dbConfig; 
-                }             
-            }
-            console.log(this.config);        
+        dbConfig.entities.forEach(sEntity => {
+            this.entities[sEntity.name] = sEntity;
+        });
 
             //Init database engine
             switch(this.config.type){
@@ -48,5 +56,14 @@ export default class mOrm {
                 throw new Error (`Engine ${this.config.type} not supported`);
             }
             await this.dbInstance.initialize();
-        }
+            console.log(`Connection to ${this.config.database} established with success`);
     }
+        getEntity(name) {
+            for(let entity in this.entities){
+              if (entity.toLowerCase() == name.toLowerCase()) {
+                return new this.entities[entity](this.dbInstance, name);
+              }
+            }
+            throw new Error(`Table error: ${name} doesn't exist`);
+        }
+}
